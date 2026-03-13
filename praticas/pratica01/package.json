@@ -1,0 +1,16 @@
+{
+  "name": "pratica01",
+  "version": "1.0.0",
+  "description": "Nossa primeira prática tem como objetivo garantir que seu ambiente de desenvolvimento está pronto e que você domina o fluxo de versionamento que usaremos até o fim do semestre.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "expo": "^55.0.6"
+  }
+}
