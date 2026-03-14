@@ -1,0 +1,16 @@
+{
+  "name": "pratica02",
+  "version": "1.0.0",
+  "description": "Chegou a hora de dar uma \"cara\" ao nosso aplicativo! Nesta prática, vamos construir a **Interface Gráfica (UI)** do To-Do List. Ainda não teremos funcionalidades reais (como adicionar ou deletar), o objetivo hoje é apenas desenhar a tela usando os Componentes Core e o StyleSheet.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "expo": "^55.0.6"
+  }
+}
