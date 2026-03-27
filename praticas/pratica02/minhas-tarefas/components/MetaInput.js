@@ -1,4 +1,3 @@
-import React from 'react';
 import { View, TextInput, Button, StyleSheet } from 'react-native';
 
 function MetaInput(props) {
@@ -28,7 +27,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    flex: 1,
     marginBottom: 24, 
   },
   inputText: {
