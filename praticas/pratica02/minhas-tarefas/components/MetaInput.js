@@ -29,7 +29,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flex: 1,
-    marginBottom: 24, // Espaçamento opcional para separar da lista
+    marginBottom: 24, 
   },
   inputText: {
     borderColor: '#cccccc',
