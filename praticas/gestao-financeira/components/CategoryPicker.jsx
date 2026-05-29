@@ -1,27 +1,24 @@
 import { Picker } from "@react-native-picker/picker"
 import { StyleSheet, Text, View } from "react-native"
-import { categories } from "../constants/categories"
 import { colors } from "../constants/colors"
 import { globalStyles } from "../styles/globalStyles"
 
-const categoryOptions = Object.values(categories)
-
-export default function CategoryPicker({ form, setForm }) {
+export default function CategoryPicker({ categories, form, setForm }) {
   return (
     <View>
       <Text style={globalStyles.inputLabel}>Categoria</Text>
       <View style={styles.picker}>
         <Picker
-          selectedValue={form.category}
-          onValueChange={(category) =>
-            setForm((currentForm) => ({ ...currentForm, category }))
+          selectedValue={form.categoryId}
+          onValueChange={(categoryId) =>
+            setForm((currentForm) => ({ ...currentForm, categoryId }))
           }
         >
-          {categoryOptions.map((category) => (
+          {categories.map((category) => (
             <Picker.Item
-              key={category.name}
+              key={category.id}
               label={category.displayName}
-              value={category.name}
+              value={category.id}
             />
           ))}
         </Picker>

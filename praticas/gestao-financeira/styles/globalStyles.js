@@ -45,6 +45,6 @@ export const globalStyles = StyleSheet.create({
   },
   negativeText: {
     fontSize: 16,
-    color: colors.negativesText,
+    color: colors.negativeText,
   },
 })

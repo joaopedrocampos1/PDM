@@ -1,10 +1,12 @@
-import { useContext, useRef, useState } from "react"
+import { useContext, useEffect, useMemo, useRef, useState } from "react"
 import {
+  ActivityIndicator,
   Alert,
   Keyboard,
   KeyboardAvoidingView,
   ScrollView,
   StyleSheet,
+  Text,
   TouchableWithoutFeedback,
   View,
 } from "react-native"
@@ -14,52 +16,94 @@ import CategoryPicker from "../../components/CategoryPicker"
 import CurrencyInput from "../../components/CurrencyInput"
 import DatePicker from "../../components/DatePicker"
 import DescriptionInput from "../../components/DescriptionInput"
-import { categories } from "../../constants/categories"
-import { MoneyContext, saveTransactions } from "../../contexts/GlobalState"
+import { colors } from "../../constants/colors"
+import { MoneyContext } from "../../contexts/GlobalState"
 import { globalStyles } from "../../styles/globalStyles"
 
-function createInitialForm() {
+function createInitialForm(categoryId = "") {
   return {
     description: "",
     value: 0,
     date: new Date(),
-    category: categories.income.name,
-  }
-}
-
-function createTransactionId(transactions) {
-  return transactions.length
-    ? Math.max(...transactions.map((transaction) => transaction.id)) + 1
-    : 1
-}
-
-function createTransaction(form, transactions) {
-  return {
-    id: createTransactionId(transactions),
-    ...form,
-    date: form.date.toISOString(),
+    categoryId,
   }
 }
 
 export default function AddTransactions() {
-  const [form, setForm] = useState(createInitialForm)
-  const [transactions, setTransactions] = useContext(MoneyContext)
+  const { addTransaction, categories, loading } = useContext(MoneyContext)
   const valueInputRef = useRef(null)
 
-  const addTransaction = async () => {
-    const newTransaction = createTransaction(form, transactions)
-    const updatedTransactions = [...transactions, newTransaction]
+  const defaultCategoryId = useMemo(() => {
+    if (categories.length === 0) return ""
 
-    setTransactions(updatedTransactions)
-    setForm(createInitialForm())
+    const incomeCategory = categories.find((category) => category.isIncome)
+    return incomeCategory ? incomeCategory.id : categories[0].id
+  }, [categories])
 
+  const [form, setForm] = useState(() => createInitialForm())
+  const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (!form.categoryId && defaultCategoryId) {
+      setForm((currentForm) => ({
+        ...currentForm,
+        categoryId: defaultCategoryId,
+      }))
+    }
+  }, [defaultCategoryId, form.categoryId])
+
+  const handleAddTransaction = async () => {
+    if (!form.description.trim()) {
+      Alert.alert("Informe a descrição.")
+      return
+    }
+
+    if (!form.value || form.value <= 0) {
+      Alert.alert("Informe um valor maior que zero.")
+      return
+    }
+
+    if (!form.categoryId) {
+      Alert.alert("Selecione uma categoria.")
+      return
+    }
+
+    setSubmitting(true)
     try {
-      await saveTransactions(updatedTransactions)
+      await addTransaction({
+        description: form.description.trim(),
+        value: form.value,
+        date: form.date,
+        categoryId: form.categoryId,
+      })
+
+      setForm(createInitialForm(defaultCategoryId))
       Alert.alert("Transação adicionada com sucesso!")
     } catch (error) {
       console.log(error)
-      Alert.alert("Não foi possível salvar a transação.")
+      Alert.alert("Não foi possível salvar a transação.", error.message)
+    } finally {
+      setSubmitting(false)
     }
+  }
+
+  if (loading) {
+    return (
+      <View style={[globalStyles.screenContainer, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={globalStyles.secondaryText}>Carregando categorias...</Text>
+      </View>
+    )
+  }
+
+  if (categories.length === 0) {
+    return (
+      <View style={[globalStyles.screenContainer, styles.center]}>
+        <Text style={globalStyles.primaryText}>
+          Nenhuma categoria cadastrada.
+        </Text>
+      </View>
+    )
   }
 
   return (
@@ -78,10 +122,16 @@ export default function AddTransactions() {
               valueInputRef={valueInputRef}
             />
             <DatePicker form={form} setForm={setForm} />
-            <CategoryPicker form={form} setForm={setForm} />
+            <CategoryPicker
+              categories={categories}
+              form={form}
+              setForm={setForm}
+            />
           </View>
 
-          <Button onPress={addTransaction}>Adicionar</Button>
+          <Button onPress={handleAddTransaction} disabled={submitting}>
+            {submitting ? "Salvando..." : "Adicionar"}
+          </Button>
         </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -93,5 +143,11 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 10,
     marginBottom: 40,
+  },
+  center: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    padding: 24,
   },
 })

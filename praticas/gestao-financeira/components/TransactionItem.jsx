@@ -1,13 +1,11 @@
 import { StyleSheet, Text, View } from "react-native"
-import { categories } from "../constants/categories"
 import { globalStyles } from "../styles/globalStyles"
 import CategoryItem from "./CategoryItem"
 
 export default function TransactionItem({ category, date, description, value }) {
-  const valueStyle =
-    category === categories.income.name
-      ? globalStyles.positiveText
-      : globalStyles.negativeText
+  const valueStyle = category?.isIncome
+    ? globalStyles.positiveText
+    : globalStyles.negativeText
 
   return (
     <>
@@ -17,7 +15,7 @@ export default function TransactionItem({ category, date, description, value }) 
           <Text style={globalStyles.secondaryText}>{formatDate(date)}</Text>
           <View style={styles.bottomLineContainer}>
             <Text style={globalStyles.primaryText}>{description}</Text>
-            <Text style={valueStyle}>{formatCurrency(value)}</Text>
+            <Text style={valueStyle}>{formatCurrency(Number(value))}</Text>
           </View>
         </View>
       </View>

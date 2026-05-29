@@ -1,22 +1,17 @@
 import { StyleSheet, Text, View } from "react-native"
-import { categories } from "../constants/categories"
 import { globalStyles } from "../styles/globalStyles"
 import CategoryItem from "./CategoryItem"
 
 export default function SummaryItem({ category, value }) {
-  const categoryConfig = categories[category] ?? categories.food
-  const valueStyle =
-    category === categories.income.name
-      ? globalStyles.positiveText
-      : globalStyles.negativeText
+  const valueStyle = category?.isIncome
+    ? globalStyles.positiveText
+    : globalStyles.negativeText
 
   return (
     <View style={styles.itemContainer}>
       <CategoryItem category={category} />
       <View style={styles.textContainer}>
-        <Text style={globalStyles.primaryText}>
-          {categoryConfig.displayName}
-        </Text>
+        <Text style={globalStyles.primaryText}>{category.displayName}</Text>
         <Text style={valueStyle}>{formatCurrency(value)}</Text>
       </View>
     </View>

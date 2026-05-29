@@ -13,6 +13,7 @@ export default function TabsLayout() {
         headerTitleAlign: "center",
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.inactive,
+        tabBarLabelStyle: styles.tabLabel,
         tabBarStyle: styles.tabBar,
         tabBarButton: (props) => (
           <TouchableOpacity {...props} activeOpacity={0.8} />
@@ -29,15 +30,24 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="categories"
+        options={{
+          title: "Categorias",
+          tabBarIcon: ({ color }) => (
+            <MaterialIcons name="category" size={28} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="add-transactions"
         options={{
-          title: "Adicionar Transação",
-          tabBarLabel: "",
+          title: "Transações",
+          tabBarLabel: "Adicionar",
           tabBarIcon: () => (
             <View style={styles.addButton}>
               <MaterialIcons
                 name="add"
-                size={40}
+                size={24}
                 color={colors.primaryContrast}
               />
             </View>
@@ -59,16 +69,20 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 60,
-    paddingTop: 5,
+    height: 68,
+    paddingTop: 4,
+    paddingBottom: 6,
     backgroundColor: colors.background,
+  },
+  tabLabel: {
+    fontSize: 11,
   },
   addButton: {
     alignItems: "center",
     justifyContent: "center",
-    height: 64,
-    width: 64,
-    borderRadius: 32,
+    height: 36,
+    width: 36,
+    borderRadius: 18,
     backgroundColor: colors.primary,
   },
 })
