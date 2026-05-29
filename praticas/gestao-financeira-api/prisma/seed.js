@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -46,6 +47,21 @@ const defaultCategories = [
 ];
 
 async function main() {
+  const passwordHash = await bcrypt.hash("123456", 10);
+
+  await prisma.user.upsert({
+    where: { email: "aluno@iesb.com" },
+    update: {
+      name: "Aluno IESB",
+      passwordHash,
+    },
+    create: {
+      name: "Aluno IESB",
+      email: "aluno@iesb.com",
+      passwordHash,
+    },
+  });
+
   for (const category of defaultCategories) {
     await prisma.category.upsert({
       where: { name: category.name },

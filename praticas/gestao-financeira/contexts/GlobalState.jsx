@@ -1,15 +1,25 @@
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { createContext, useCallback, useEffect, useState } from "react"
-import { api } from "../services/api"
+import { api, setAuthToken } from "../services/api"
+
+const AUTH_STORAGE_KEY = "gestao-financeira-auth"
 
 export const MoneyContext = createContext()
 
 export default function GlobalState({ children }) {
+  const [user, setUser] = useState(null)
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [error, setError] = useState(null)
 
   const refresh = useCallback(async () => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -26,16 +36,75 @@ export default function GlobalState({ children }) {
     } finally {
       setLoading(false)
     }
+  }, [user])
+
+  useEffect(() => {
+    async function loadStoredAuth() {
+      try {
+        const storedAuth = await AsyncStorage.getItem(AUTH_STORAGE_KEY)
+
+        if (storedAuth) {
+          const parsedAuth = JSON.parse(storedAuth)
+          setAuthToken(parsedAuth.token)
+
+          const response = await api.me()
+          setUser(response.user)
+        }
+      } catch {
+        await AsyncStorage.removeItem(AUTH_STORAGE_KEY)
+        setAuthToken(null)
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    loadStoredAuth()
   }, [])
 
   useEffect(() => {
-    refresh()
-  }, [refresh])
+    if (!authLoading) {
+      refresh()
+    }
+  }, [authLoading, refresh])
+
+  const login = useCallback(async (credentials) => {
+    const auth = await api.login(credentials)
+
+    setAuthToken(auth.token)
+    await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(auth))
+    setUser(auth.user)
+
+    return auth.user
+  }, [])
+
+  const logout = useCallback(async () => {
+    await AsyncStorage.removeItem(AUTH_STORAGE_KEY)
+    setAuthToken(null)
+    setUser(null)
+    setTransactions([])
+    setCategories([])
+    setError(null)
+    setLoading(false)
+  }, [])
 
   const addTransaction = useCallback(async (data) => {
     const created = await api.createTransaction(data)
-    setTransactions((currentTransactions) => [created, ...currentTransactions])
+    setTransactions((currentTransactions) =>
+      [created, ...currentTransactions].sort(
+        (a, b) => new Date(b.date) - new Date(a.date),
+      ),
+    )
     return created
+  }, [])
+
+  const updateTransaction = useCallback(async (id, data) => {
+    const updated = await api.updateTransaction(id, data)
+    setTransactions((currentTransactions) =>
+      currentTransactions
+        .map((transaction) => (transaction.id === id ? updated : transaction))
+        .sort((a, b) => new Date(b.date) - new Date(a.date)),
+    )
+    return updated
   }, [])
 
   const removeTransaction = useCallback(async (id) => {
@@ -65,12 +134,17 @@ export default function GlobalState({ children }) {
   return (
     <MoneyContext.Provider
       value={{
+        user,
         transactions,
         categories,
         loading,
+        authLoading,
         error,
+        login,
+        logout,
         refresh,
         addTransaction,
+        updateTransaction,
         removeTransaction,
         addCategory,
         removeCategory,

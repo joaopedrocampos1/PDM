@@ -39,10 +39,6 @@
       ],
       "@react-native-community/datetimepicker"
     ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
     "extra": {
       "router": {
         "origin": false

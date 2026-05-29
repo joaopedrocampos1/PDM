@@ -7,10 +7,12 @@ import {
   View,
 } from "react-native"
 
+import MonthYearFilter from "../../components/MonthYearFilter"
 import PieChart from "../../components/PieChart"
 import SummaryItem from "../../components/SummaryItem"
 import { colors } from "../../constants/colors"
 import { MoneyContext } from "../../contexts/GlobalState"
+import { useMonthFilter } from "../../hooks/useMonthFilter"
 import { globalStyles } from "../../styles/globalStyles"
 
 function calculateTotals(transactions, categories) {
@@ -45,9 +47,11 @@ function calculateTotals(transactions, categories) {
 
 export default function Summary() {
   const { categories, loading, transactions } = useContext(MoneyContext)
+  const { filteredTransactions, selectedMonth, setSelectedMonth } =
+    useMonthFilter(transactions)
   const totals = useMemo(() => {
-    return calculateTotals(transactions, categories)
-  }, [transactions, categories])
+    return calculateTotals(filteredTransactions, categories)
+  }, [filteredTransactions, categories])
 
   if (loading && categories.length === 0) {
     return (
@@ -63,10 +67,15 @@ export default function Summary() {
   return (
     <View style={globalStyles.screenContainer}>
       <ScrollView contentContainerStyle={globalStyles.content}>
+        <MonthYearFilter
+          selectedMonth={selectedMonth}
+          onChange={setSelectedMonth}
+        />
+
         <PieChart
           categories={categories}
           totalsById={totals.totalsById}
-          transactionCount={transactions.length}
+          transactionCount={filteredTransactions.length}
         />
 
         <View style={globalStyles.line} />

@@ -1,4 +1,4 @@
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -10,38 +10,53 @@ import {
   View,
 } from "react-native"
 
+import MonthYearFilter from "../../components/MonthYearFilter"
+import TransactionActionsModal from "../../components/TransactionActionsModal"
 import TransactionItem from "../../components/TransactionItem"
 import { colors } from "../../constants/colors"
 import { MoneyContext } from "../../contexts/GlobalState"
+import { useMonthFilter } from "../../hooks/useMonthFilter"
 import { globalStyles } from "../../styles/globalStyles"
 
 export default function Transactions() {
-  const { error, loading, refresh, removeTransaction, transactions } =
-    useContext(MoneyContext)
+  const {
+    categories,
+    error,
+    loading,
+    refresh,
+    removeTransaction,
+    transactions,
+    updateTransaction,
+    user,
+  } = useContext(MoneyContext)
+  const [selectedTransaction, setSelectedTransaction] = useState(null)
+  const { filteredTransactions, selectedMonth, setSelectedMonth } =
+    useMonthFilter(transactions)
 
   const handleLongPress = (item) => {
-    Alert.alert(
-      "Excluir transação",
-      `Deseja excluir "${item.description}"?`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Excluir",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await removeTransaction(item.id)
-            } catch (currentError) {
-              Alert.alert(
-                "Erro ao excluir",
-                currentError.message ?? "Tente novamente.",
-              )
-            }
-          },
-        },
-      ],
-      { cancelable: true },
-    )
+    setSelectedTransaction(item)
+  }
+
+  const handleDelete = async () => {
+    if (!selectedTransaction) return
+
+    try {
+      await removeTransaction(selectedTransaction.id)
+      setSelectedTransaction(null)
+    } catch (currentError) {
+      Alert.alert("Erro ao excluir", currentError.message ?? "Tente novamente.")
+    }
+  }
+
+  const handleSave = async (data) => {
+    if (!selectedTransaction) return
+
+    try {
+      await updateTransaction(selectedTransaction.id, data)
+      setSelectedTransaction(null)
+    } catch (currentError) {
+      Alert.alert("Erro ao salvar", currentError.message ?? "Tente novamente.")
+    }
   }
 
   if (loading && transactions.length === 0) {
@@ -68,8 +83,17 @@ export default function Transactions() {
   return (
     <View style={globalStyles.screenContainer}>
       <FlatList
-        data={transactions}
+        data={filteredTransactions}
         keyExtractor={(item) => String(item.id)}
+        ListHeaderComponent={
+          <View style={styles.header}>
+            <Text style={styles.welcome}>Olá, {user?.name}!</Text>
+            <MonthYearFilter
+              selectedMonth={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </View>
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             activeOpacity={0.7}
@@ -80,13 +104,21 @@ export default function Transactions() {
         )}
         ListEmptyComponent={
           <Text style={[globalStyles.secondaryText, styles.emptyText]}>
-            Ainda não há nenhum item!
+            Nenhuma transação neste mês.
           </Text>
         }
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={refresh} />
         }
         contentContainerStyle={globalStyles.content}
+      />
+      <TransactionActionsModal
+        categories={categories}
+        onClose={() => setSelectedTransaction(null)}
+        onDelete={handleDelete}
+        onSave={handleSave}
+        transaction={selectedTransaction}
+        visible={Boolean(selectedTransaction)}
       />
     </View>
   )
@@ -114,5 +146,13 @@ const styles = StyleSheet.create({
   retryText: {
     color: colors.primaryContrast,
     fontWeight: "600",
+  },
+  header: {
+    gap: 12,
+  },
+  welcome: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.primaryText,
   },
 })

@@ -38,17 +38,27 @@ function getBaseUrl() {
 }
 
 const BASE_URL = getBaseUrl()
+let authToken = null
+
+export function setAuthToken(token) {
+  authToken = token
+}
 
 async function request(path, options = {}) {
   const controller = new AbortController()
   let timeoutId
+  const headers = {
+    "Content-Type": "application/json",
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...options.headers,
+  }
 
   try {
     const response = await Promise.race([
       fetch(`${BASE_URL}${path}`, {
-        headers: { "Content-Type": "application/json" },
-        signal: controller.signal,
         ...options,
+        headers,
+        signal: controller.signal,
       }),
       new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
@@ -78,6 +88,10 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  login: (data) =>
+    request("/auth/login", { method: "POST", body: JSON.stringify(data) }),
+  me: () => request("/auth/me"),
+
   listCategories: () => request("/categories"),
   createCategory: (data) =>
     request("/categories", { method: "POST", body: JSON.stringify(data) }),
