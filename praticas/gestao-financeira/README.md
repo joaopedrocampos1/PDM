@@ -67,8 +67,12 @@ CREATE DATABASE gestao_financeira;
 Se quiser usar um usuário próprio para o projeto, rode também:
 
 ```sql
-CREATE USER IF NOT EXISTS 'gestao_user'@'localhost' IDENTIFIED BY 'gestao123';
-CREATE USER IF NOT EXISTS 'gestao_user'@'127.0.0.1' IDENTIFIED BY 'gestao123';
+CREATE USER IF NOT EXISTS 'gestao_user'@'localhost' IDENTIFIED WITH mysql_native_password BY 'gestao123';
+CREATE USER IF NOT EXISTS 'gestao_user'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'gestao123';
+
+ALTER USER 'gestao_user'@'localhost' IDENTIFIED WITH mysql_native_password BY 'gestao123';
+ALTER USER 'gestao_user'@'127.0.0.1' IDENTIFIED WITH mysql_native_password BY 'gestao123';
+
 GRANT ALL PRIVILEGES ON gestao_financeira.* TO 'gestao_user'@'localhost';
 GRANT ALL PRIVILEGES ON gestao_financeira.* TO 'gestao_user'@'127.0.0.1';
 FLUSH PRIVILEGES;
@@ -113,8 +117,10 @@ JWT_SECRET="gestao-financeira-dev-secret"
 Depois aplique as tabelas no banco:
 
 ```bash
-npm run prisma:migrate
+npm run prisma:push
 ```
+
+Use `prisma:push` para rodar localmente com o usuário `gestao_user`. O comando `prisma:migrate` cria um banco temporário chamado shadow database e exige permissão para criar bancos, por isso pode retornar o erro `P3014`.
 
 Agora rode o seed para criar as categorias padrão e o usuário de teste:
 
@@ -294,7 +300,7 @@ Na pasta da API:
 
 ```bash
 npm run dev
-npm run prisma:migrate
+npm run prisma:push
 npm run prisma:seed
 npm run prisma:studio
 ```
@@ -341,6 +347,42 @@ Se você criou o usuário sugerido neste README, use:
 DATABASE_URL="mysql://gestao_user:gestao123@127.0.0.1:3306/gestao_financeira"
 ```
 
+### Erro P3014 no Prisma Migrate
+
+Esse erro acontece quando o comando `npm run prisma:migrate` tenta criar o shadow database e o usuário do MySQL não tem permissão para criar bancos.
+
+Para rodar o projeto localmente, use:
+
+```bash
+npm run prisma:push
+```
+
+Depois rode:
+
+```bash
+npm run prisma:seed
+```
+
+### Erro ao abrir `mysql` pelo terminal
+
+Se o comando `mysql` sozinho mostrar erro de socket ou permissão, teste uma destas opções:
+
+```bash
+sudo mysql
+```
+
+ou conecte via TCP com o usuário do projeto:
+
+```bash
+mysql -h 127.0.0.1 -u gestao_user -p
+```
+
+Quando pedir a senha, use:
+
+```text
+gestao123
+```
+
 ### O app fica carregando
 
 Normalmente isso acontece quando o app não consegue acessar a API.
@@ -381,7 +423,7 @@ Use esta lista rápida quando for apresentar ou testar o projeto:
 - Banco `gestao_financeira` criado.
 - `.env` da API configurado.
 - `npm install` rodado na API.
-- `npm run prisma:migrate` rodado na API.
+- `npm run prisma:push` rodado na API.
 - `npm run prisma:seed` rodado na API.
 - API rodando com `npm run dev`.
 - Health-check abrindo em `http://localhost:3000`.
